@@ -103,7 +103,7 @@ while inputLoop==True:
 		E2perlay.append(69)
 		posrat.append(.22)
 		shearmod.append(4)
-		angle=input('What angle (0 is stright front to back) ')
+		angle=int(input('What angle in degrees (0 is stright front to back) '))
 		theta.append(angle)
 		density.append(1850)
 		Hn.append(0.1)
@@ -113,7 +113,7 @@ while inputLoop==True:
 		E2perlay.append(150)
 		posrat.append(.1)
 		shearmod.append(4)
-		angle=input('What angle (0 is stright front to back) ')
+		angle=int(input('What angle in degrees (0 is stright front to back) '))
 		theta.append(angle)
 		density.append(1522)
 		Hn.append(0.1)
@@ -128,7 +128,7 @@ while inputLoop==True:
 				E2perlay[interfacingEdges]=E1perlay[interfacingEdges]
 				isotropicType==False
 			elif isotropic=='2' or isotropic=='3':
-				E2perlay[interfacingEdges]=float(input('What is the materials modulus of elasticity going side to side? (GPa) '))
+				E2perlay[interfacingEdges]=int(input('What is the materials modulus of elasticity going side to side? (GPa) '))
 				isotropicType==False
 			
 		
@@ -313,11 +313,16 @@ print(NM)
 print("\n")
 
 
+#idk what this shit is?
+E1perlay2 = E1perlay
+E2perlay2 = E2perlay
+
 #This is now an iterative process. No guess and check here.
 holder3=1
-weightNewtons=1
+weightNewtons=1 #starting at 1 Newton (.225 lbs)
 stressLfinal=0
 strainLfinal=0
+layeredges2=layeredges
 while holder3==1:
 	
 	newNM=NM+[0,0,0,weightNewtons*.5,0,0] #weight from the person
@@ -336,17 +341,13 @@ while holder3==1:
 	newKYnought=newNoughts[5-1]
 	newKXYnought=newNoughts[6-1]
 	
-	layeredges2=layeredges
 	counter5=0  #making that Zalt business
 	for loopvar5 in layeredges:
-		counter5=counter5+1
+		#print(counter5)
 		if sum(mylinspace(1,(interfacingEdges),(interfacingEdges)))==3:
 			break
 		
 		if loopvar5==layeredges[1] or loopvar5==layeredges[interfacingEdges-1]:
-			print(layeredges)
-			print('*')
-			print(layeredges2)
 			layeredges2[counter5]=loopvar5
 		else:
 			layeredges2[counter5]=loopvar5
@@ -355,6 +356,7 @@ while holder3==1:
 		
 	trans(layeredges2)
 	
+	
 	for loopvar3 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
 		epsX=newEPSXnought+layeredges2[loopvar3]*newKXnought
 		epsY=newEPSYnought+layeredges2[loopvar3]*newKYnought
@@ -362,37 +364,36 @@ while holder3==1:
 		#now to find the stresses
 		#material properties by layer
 		counter6=0
-		counter7=-1
+		counter7=0
 		counter8=0
 		counter9=0
-		for loopvar6 in E1perlay:
-			counter6=counter6+1
-			E1perlay2[counter6]=loopvar6
-			counter6=counter6+1
-			E1perlay2[counter6]=loopvar6
+#		for loopvar6 in E1perlay:
+#			print(E1perlay2)
+#			E1perlay2[counter6]=loopvar6
+#			counter6 += 1
 		
 		E1=E1perlay2[loopvar3]
 		trans(E2perlay)
-		for loopvar7 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
-			counter7=counter7+2
-			E2perlay2[counter7]=E2perlay[loopvar7]
-			E2perlay2[counter7+1]=E2perlay[loopvar7]
+#		for loopvar7 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
+#			counter7=counter7+interfacingEdges-1
+#			E2perlay2[counter7]=E2perlay[loopvar7]
+#			E2perlay2[counter7+1]=E2perlay[loopvar7]
 		
 		E2=E2perlay2[loopvar3]
 		trans(posrat)
-		for loopvar8 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
-			counter8=counter8+1
-			posrat2[counter8]=posrat[loopvar8]
-			counter8=counter8+1
-			posrat2[counter8]=posrat[loopvar8]
+#		for loopvar8 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
+#			counter8=counter8+1
+#			posrat2[counter8]=posrat[loopvar8]
+#			counter8=counter8+1
+#			posrat2[counter8]=posrat[loopvar8]
 		
 		n12=posrat[loopvar3]
 		trans(shearmod)
-		for loopvar9 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
-			counter9=counter9+1
-			shearmod2[counter9]=shearmod[loopvar9]
-			counter9=counter9+1
-			shearmod2[counter9]=shearmod[loopvar9]
+#		for loopvar9 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
+#			counter9=counter9+1
+#			shearmod2[counter9]=shearmod[loopvar9]
+#			counter9=counter9+1
+#			shearmod2[counter9]=shearmod[loopvar9]
 		
 		G12=shearmod[loopvar3]
 		S11=1/E1
@@ -405,7 +406,7 @@ while holder3==1:
 		Q66=G12
 		Q=[[Q11,Q12,0],[Q12,Q22,0],[0,0,Q66]]
 		Q=numpy.matrix(Q)
-		Rtheta=theta[loopvar3]*pi/180
+		Rtheta=theta[loopvar3]*3.14159/180
 		m=math.cos(Rtheta)
 		n=math.sin(Rtheta)
 		T=[[m**2,n**2,2*m*n],
@@ -414,10 +415,13 @@ while holder3==1:
 		T=numpy.matrix(T)
 		Tinv=numpy.linalg.inv(T)
 		Qbar=Tinv*Q*T
-		Qbar[1][3]/=2
-		Qbar[3][2]/=2
-		Qbar[2][3]/=2
-		Qbar[3][1]/=2
+		Qbar=numpy.array(Qbar)#new
+		print(Qbar)
+		Qbar[0][2]/=2
+		Qbar[2][1]/=2
+		Qbar[1][2]/=2
+		Qbar[2][0]/=2
+		Qbar=numpy.matrix(Qbar)#new
 		# the 'human' element lol
 		strainGlobe=[epsX,epsY,gamXY] # in mm/mm
 		# strains are all unitless
