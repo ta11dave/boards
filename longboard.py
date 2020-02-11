@@ -13,21 +13,13 @@ def trans(array):
 
 #to replace mylinspace
 def mylinspace(start, stop, terms):
-	myarray = []
-	termAmt = start
-	pos = True
-	myarray.append(termAmt)
-	amt = start
-	if stop<start:
-		#negative travel
-		pos = False
-		termAmt = (stop-start-1)/terms
-	else:
-		#positive travel
-		termAmt = (stop-start+1)/terms
-	while amt != stop:
-		amt += termAmt
-		myarray.append(amt)
+	myarray =[]
+	val = start
+	myarray.append(val)
+	amt = (stop-start)/terms
+	while val != stop:
+		val += amt
+		myarray.append(val)
 	return myarray
 
 
@@ -307,7 +299,7 @@ print(numpy.linalg.det(ABDcombined))
 print("\n")
 #N (force per length) and M (Moment per area) **************************FIX?****************************
 #figuring out the N and M matrix
-NM=ABDcombined*numpy.matrix([[epsXnought+1],[epsYnought+1],[epsZnought+1],[KXnought+1],[KYnought+1],[KXYnought+1]])
+NM=ABDcombined*numpy.matrix([[epsXnought],[epsYnought],[epsZnought],[KXnought],[KYnought],[KXYnought]])
 print("NM")
 print(NM)
 print("\n")
@@ -334,17 +326,16 @@ while holder3==1:
 	#the person's weight as a moment in the X (front-back) direction.  
 	
 	
-	newEPSXnought=newNoughts[1-1]
-	newEPSYnought=newNoughts[2-1]
-	newEPSXYnought=newNoughts[3-1]
-	newKXnought=newNoughts[4-1]
-	newKYnought=newNoughts[5-1]
-	newKXYnought=newNoughts[6-1]
+	newEPSXnought=newNoughts[0]
+	newEPSYnought=newNoughts[1]
+	newEPSXYnought=newNoughts[2]
+	newKXnought=newNoughts[3]
+	newKYnought=newNoughts[4]
+	newKXYnought=newNoughts[5]
 	
 	counter5=0  #making that Zalt business
 	for loopvar5 in layeredges:
-		#print(counter5)
-		if sum(mylinspace(1,(interfacingEdges),(interfacingEdges)))==3:
+		if sum(mylinspace(0,(interfacingEdges),(interfacingEdges)))==3:
 			break
 		
 		if loopvar5==layeredges[1] or loopvar5==layeredges[interfacingEdges-1]:
@@ -357,7 +348,7 @@ while holder3==1:
 	trans(layeredges2)
 	
 	
-	for loopvar3 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
+	for loopvar3 in mylinspace(0,(interfacingEdges-1),(interfacingEdges-1)):
 		epsX=newEPSXnought+layeredges2[loopvar3]*newKXnought
 		epsY=newEPSYnought+layeredges2[loopvar3]*newKYnought
 		gamXY=newEPSXYnought+layeredges2[loopvar3]*newKXYnought
@@ -415,15 +406,17 @@ while holder3==1:
 		T=numpy.matrix(T)
 		Tinv=numpy.linalg.inv(T)
 		Qbar=Tinv*Q*T
-		Qbar=numpy.array(Qbar)#new
-		print(Qbar)
+		Qbar=numpy.array(Qbar)
 		Qbar[0][2]/=2
 		Qbar[2][1]/=2
 		Qbar[1][2]/=2
 		Qbar[2][0]/=2
 		Qbar=numpy.matrix(Qbar)#new
 		# the 'human' element lol
-		strainGlobe=[epsX,epsY,gamXY] # in mm/mm
+		epsX=numpy.array(epsX)[0][0]
+		epsY=numpy.array(epsY)[0][0]
+		gamXY=numpy.array(gamXY)[0][0]
+		strainGlobe=[[epsX],[epsY],[gamXY]] # in mm/mm
 		# strains are all unitless
 		#stresses should be GPa
 		stressGlobe=Qbar*strainGlobe*1000
@@ -435,10 +428,10 @@ while holder3==1:
 		stressLocal2=stressLfinal*1000
 
 
-		#print(weightNewtons)
+		print('test')
 		#print(stressLocal2) #all time 10**9
 		if E1perlay2[loopvar3]==11:  #birch
-			if abs(stressLocal2[1])>39*10**6 or abs(stressLocal2[3])>8.3*10**6: #units?
+			if abs(stressLocal2[0])>39*10**6 or abs(stressLocal2[2])>8.3*10**6: #units?
 				breakcause=1
 				breakNewtons=(floor(weightNewtons))
 				breakLBS=floor(weightNewtons*0.224808943)
@@ -447,8 +440,9 @@ while holder3==1:
 			else:
 				weightNewtons=weightNewtons+1 #increasing weight
 			
-		elif E1perlay2(loopvar3)==12.5: #maple
-			if  abs(stressLocal2[1])>41*10**6 or abs(stressLocal2[3])>16*10**6: #units?
+		elif E1perlay2[loopvar3]==12.5: #maple
+			print(stressLocal2)
+			if abs(stressLocal2[0])>41*10**6 or abs(stressLocal2[2])>16*10**6: #units?
 				breakcause=2
 				breakNewtons=(floor(weightNewtons))
 				breakLBS=floor(weightNewtons*0.224808943)
@@ -457,8 +451,8 @@ while holder3==1:
 			else:
 				weightNewtons=weightNewtons+1 #increasing weight
 			
-		elif E1perlay2(loopvar3)==69: #fiberglass
-			if abs(stressLocal2[1])>0.440*10**6 or abs(stressLocal2[3])>0.04*10**6: #units?
+		elif E1perlay2[loopvar3]==69: #fiberglass
+			if abs(stressLocal2[0])>0.440*10**6 or abs(stressLocal2[2])>0.04*10**6: #units?
 				breakcause=3
 				breakNewtons=(floor(weightNewtons))
 				breakLBS=floor(weightNewtons*0.224808943)
@@ -467,8 +461,8 @@ while holder3==1:
 			else:
 				weightNewtons=weightNewtons+1 #increasing weight
 			
-		elif E1perlay2(loopvar3)==150: #carbon
-			if abs(stressLocal2[1])>1.5*10**6 or abs(stressLocal2[3])>0.07*10**6: #units?
+		elif E1perlay2[loopvar3]==150: #carbon
+			if abs(stressLocal2[0])>1.5*10**6 or abs(stressLocal2[2])>0.07*10**6: #units?
 				breakcause=4
 				breakNewtons=(floor(weightNewtons))
 				breakLBS=floor(weightNewtons*0.224808943)
@@ -477,8 +471,8 @@ while holder3==1:
 			else:
 				weightNewtons=weightNewtons+1 #increasing weight
 			
-		elif E1perlay2(loopvar3)==valueStore: #custom
-			if abs(stressLocal2[1])>tensileStrength or abs(stressLocal2[3])>shearStrength:
+		elif E1perlay2[loopvar3]==valueStore: #custom
+			if abs(stressLocal2[0])>tensileStrength or abs(stressLocal2[2])>shearStrength:
 				breakcause=5
 				breakNewtons=(floor(weightNewtons))
 				breakLBS=floor(weightNewtons*0.224808943)
