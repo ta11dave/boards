@@ -2,8 +2,6 @@ import numpy
 import math
 #import a clue
 
-#THIS IS A TEST TO MAKE SURE GIT WORKS
-
 #functions
 
 def trans(anarray):
@@ -18,7 +16,10 @@ def mylinspace(start, stop, terms):
 	myarray=[]
 	val = start
 	firstarray.append(val)
-	amt = (stop-start)/terms
+	if stop!=start:
+		amt = (stop-start)/terms
+	else:
+		amt = 0
 	while val != stop:
 		val += amt
 		firstarray.append(val)
@@ -174,13 +175,6 @@ camber=float(input('what is the rocker in inches? Camber is negative. '))*25.4
 boardwidth=float(input('How wide is the board in inches at the thinnest section? '))*25.4
 wheelbase=float(input('What is the boards wheelbase in inches? '))*25.4
 
-#for testing
-print('TESTING ON')
-concavedepth=0.1*25.4
-camber=0.1*25.4
-boardwidth=5*25.4
-wheelbase=40*25.4
-
 #*******************************INPUT DONE**************************
 
 for item in range(0,len(density)):
@@ -334,6 +328,9 @@ stressLfinal=0
 strainLfinal=0
 layeredges2=layeredges
 GetOut = False
+print("\n")
+print('thinking...')
+print("\n")
 while weightloop==True:
 		
 	#newNM=NM+[0,0,0,weightNewtons*.5,0,0] #weight from the person
@@ -548,10 +545,10 @@ else:
 	flex=(breakGPa*wheelbase**3)/(48*FinalE*IFinal)
 	flexInches=flex/25.4
 	print('Itll flex ',str(flexInches),' inches')
-
+print('This assumes the weight is pressed straight down toward the middle of the board')
 
 #shows how heavy it'll be
-stringe='Your board will be '
+stringe='Your board will weight about '
 stringf=str(round(totalMass*2.2))
 stringg=' lbs'
 stringh=stringe+stringf+stringg
