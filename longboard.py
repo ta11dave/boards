@@ -6,20 +6,27 @@ import math
 
 #functions
 
-def trans(array):
-	array=numpy.matrix(array)
-	array=numpy.matrix.transpose(array)
-	array=numpy.array(array)
+def trans(anarray):
+	anarray=numpy.matrix(anarray)
+	anarray=numpy.transpose(anarray)
+	anarray=numpy.array(anarray)
+	return anarray
 
 #to replace mylinspace
 def mylinspace(start, stop, terms):
-	myarray =[]
+	firstarray =[]
+	myarray=[]
 	val = start
-	myarray.append(val)
+	firstarray.append(val)
 	amt = (stop-start)/terms
 	while val != stop:
 		val += amt
-		myarray.append(val)
+		firstarray.append(val)
+	for anumber in firstarray:  #makes results int type if int
+		if anumber%1 == 0:
+			myarray.append(int(anumber))
+		else:
+			myarray.append(anumber)
 	return myarray
 
 
@@ -44,7 +51,7 @@ print('press 1 for baltic birch')
 print('press 2 for maple')
 print('press 3 for a layer of fiberglass ')
 print('press 4 for a layer of carbon fiber ')
-print('press 5 for a costom material')
+print('press 5 for a custom material')
 
 E1perlay=[]
 E2perlay=[]
@@ -138,6 +145,8 @@ while inputLoop==True:
 		Hn.append(layerheight*25.4) #in mm
 	else:
 		print('-----------------------------------------------------')
+		print('Just type the number and hit return')
+		print('-----------------------------------------------------')
 		print('press 1 for baltic birch')
 		print('press 2 for maple')
 		print('press 3 for a layer of fiberglass')
@@ -150,7 +159,7 @@ while inputLoop==True:
 	interfacingEdges=interfacingEdges+1 #layers of material
 	mylayer=mylayer+1 
 	if float(layer)<mylayer:
-		print('here goes')
+		#print('here goes')
 		inputLoop=False
 		break
 
@@ -164,6 +173,15 @@ concavedepth=float(input('how deep is the concave in inches? '))*25.4
 camber=float(input('what is the rocker in inches? Camber is negative. '))*25.4
 boardwidth=float(input('How wide is the board in inches at the thinnest section? '))*25.4
 wheelbase=float(input('What is the boards wheelbase in inches? '))*25.4
+
+#for testing
+print('TESTING ON')
+concavedepth=0.1*25.4
+camber=0.1*25.4
+boardwidth=5*25.4
+wheelbase=40*25.4
+
+#*******************************INPUT DONE**************************
 
 for item in range(0,len(density)):
 	density[item]*=10**(-9)  #kg/mm**3
@@ -208,25 +226,27 @@ D66=0
 thickness=[]
 subtracted=0 #amount to be taken away every
 
-for counter2point5 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)): #for each interfacing layer...
-	thickness.append(Htotal-subtracted) #make a thickness 
-	subtracted+=Hn[int(counter2point5)-1]
+perboard = mylinspace(0,(interfacingEdges-2),(interfacingEdges-2))
 
-trans(thickness)
+thickness.append(Htotal)
+for eachboard in perboard: #for each interfacing layer...
+	subtracted+=Hn[int(eachboard)]
+	thickness.append(Htotal-subtracted) #make a thickness 
+
 layeredges=[]
 for item in thickness:
 	layeredges.append(item-Htotal/2)
-layeredges.append(-1*layeredges[0])
-trans(layeredges)
+layeredges=trans(layeredges)
 
 #May the great looping begin! Making the ABD matrix
-counter3=mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)) #for each 
+counter3=mylinspace(0,(interfacingEdges-2),(interfacingEdges-2)) #for each board
 for loopvar in counter3:
+	print(loopvar)
 	loopvar=int(loopvar)
-	E1=E1perlay[loopvar-1]
-	E2=E2perlay[loopvar-1]
-	n12=posrat[loopvar-1]
-	G12=shearmod[loopvar-1]
+	E1=E1perlay[loopvar]
+	E2=E2perlay[loopvar]
+	n12=posrat[loopvar]
+	G12=shearmod[loopvar]
 	S11=1/E1
 	S12=-n12/E1
 	S22=1/E2
@@ -273,9 +293,7 @@ for loopvar in counter3:
 
 #print(layeredges)
 
-A=[[A11,A12,A16],
-[A12,A22,A26],
-[A16,A26,A66]]
+A=[[A11,A12,A16],[A12,A22,A26],[A16,A26,A66]]
 A=numpy.matrix(A)
 print('A')
 print(A)
@@ -310,14 +328,17 @@ E1perlay2 = E1perlay
 E2perlay2 = E2perlay
 
 #This is now an iterative process. No guess and check here.
-holder3=1
+weightloop=1
 weightNewtons=1 #starting at 1 Newton (.225 lbs)
 stressLfinal=0
 strainLfinal=0
 layeredges2=layeredges
-while holder3==1:
-	
-	newNM=NM+[0,0,0,weightNewtons*.5,0,0] #weight from the person
+GetOut = False
+while weightloop==True:
+		
+	#newNM=NM+[0,0,0,weightNewtons*.5,0,0] #weight from the person
+	newNM=NM
+	newNM[3] = newNM[3]+ weightNewtons*.5
 	ABDcombined=numpy.array(ABDcombined)
 	ABDcombined=numpy.linalg.inv(ABDcombined)
 	ABDcombined=numpy.matrix(ABDcombined)
@@ -333,22 +354,18 @@ while holder3==1:
 	newKYnought=newNoughts[4]
 	newKXYnought=newNoughts[5]
 	
-	counter5=0  #making that Zalt business
-	for loopvar5 in layeredges:
-		if sum(mylinspace(0,(interfacingEdges),(interfacingEdges)))==3:
-			break
+	#counter5=0  #making that Zalt business
+	#for loopvar5 in layeredges:		
+	#	if loopvar5==layeredges[1] or loopvar5==layeredges[interfacingEdges-1]:
+	#		layeredges2[counter5]=loopvar5
+	#	else:
+	#		layeredges2[counter5]=loopvar5
+	#		counter5=counter5+1
+	#		layeredges2[counter5]=loopvar5
 		
-		if loopvar5==layeredges[1] or loopvar5==layeredges[interfacingEdges-1]:
-			layeredges2[counter5]=loopvar5
-		else:
-			layeredges2[counter5]=loopvar5
-			counter5=counter5+1
-			layeredges2[counter5]=loopvar5
-		
-	trans(layeredges2)
+	#trans(layeredges2)
 	
-	
-	for loopvar3 in mylinspace(0,(interfacingEdges-1),(interfacingEdges-1)):
+	for loopvar3 in mylinspace(0,(interfacingEdges-2),(interfacingEdges-2)):
 		epsX=newEPSXnought+layeredges2[loopvar3]*newKXnought
 		epsY=newEPSYnought+layeredges2[loopvar3]*newKYnought
 		gamXY=newEPSXYnought+layeredges2[loopvar3]*newKXYnought
@@ -386,6 +403,7 @@ while holder3==1:
 #			counter9=counter9+1
 #			shearmod2[counter9]=shearmod[loopvar9]
 		
+		
 		G12=shearmod[loopvar3]
 		S11=1/E1
 		S12=-n12/E1
@@ -419,72 +437,58 @@ while holder3==1:
 		strainGlobe=[[epsX],[epsY],[gamXY]] # in mm/mm
 		# strains are all unitless
 		#stresses should be GPa
-		stressGlobe=Qbar*strainGlobe*1000
+		stressGlobe=Qbar*strainGlobe
 		strainLocal=T*strainGlobe
 		strainLfinal=strainLfinal+strainLocal
 		stressLocal=Q*strainLocal
 		stressLfinal=stressLfinal+stressLocal
-		strainLocal2=strainLfinal*1000 #no idea why this works
-		stressLocal2=stressLfinal*1000
-
-
-		print('test')
+		strainLocal2=strainLfinal /1000 #units were converted here
+		stressLocal2=stressLfinal /1000
+		
+		
 		#print(stressLocal2) #all time 10**9
 		if E1perlay2[loopvar3]==11:  #birch
 			if abs(stressLocal2[0])>39*10**6 or abs(stressLocal2[2])>8.3*10**6: #units?
 				breakcause=1
-				breakNewtons=(floor(weightNewtons))
-				breakLBS=floor(weightNewtons*0.224808943)
-				holder3=2
-				break
-			else:
-				weightNewtons=weightNewtons+1 #increasing weight
+				breakNewtons=(math.floor(weightNewtons))
+				breakLBS=math.floor(weightNewtons*0.224808943)
+				GetOut=True
 			
 		elif E1perlay2[loopvar3]==12.5: #maple
-			print(stressLocal2)
 			if abs(stressLocal2[0])>41*10**6 or abs(stressLocal2[2])>16*10**6: #units?
 				breakcause=2
-				breakNewtons=(floor(weightNewtons))
-				breakLBS=floor(weightNewtons*0.224808943)
-				holder3=2
-				break
-			else:
-				weightNewtons=weightNewtons+1 #increasing weight
+				breakNewtons=(math.floor(weightNewtons))
+				breakLBS=math.floor(weightNewtons*0.224808943)
+				GetOut=True
 			
 		elif E1perlay2[loopvar3]==69: #fiberglass
 			if abs(stressLocal2[0])>0.440*10**6 or abs(stressLocal2[2])>0.04*10**6: #units?
 				breakcause=3
-				breakNewtons=(floor(weightNewtons))
-				breakLBS=floor(weightNewtons*0.224808943)
-				holder3=2
-				break
-			else:
-				weightNewtons=weightNewtons+1 #increasing weight
+				breakNewtons=(math.floor(weightNewtons))
+				breakLBS=math.floor(weightNewtons*0.224808943)
+				GetOut=True
 			
 		elif E1perlay2[loopvar3]==150: #carbon
 			if abs(stressLocal2[0])>1.5*10**6 or abs(stressLocal2[2])>0.07*10**6: #units?
 				breakcause=4
-				breakNewtons=(floor(weightNewtons))
-				breakLBS=floor(weightNewtons*0.224808943)
-				holder3=2
-				break
-			else:
-				weightNewtons=weightNewtons+1 #increasing weight
+				breakNewtons=(math.floor(weightNewtons))
+				breakLBS=math.floor(weightNewtons*0.224808943)
+				GetOut=True
 			
 		elif E1perlay2[loopvar3]==valueStore: #custom
 			if abs(stressLocal2[0])>tensileStrength or abs(stressLocal2[2])>shearStrength:
 				breakcause=5
-				breakNewtons=(floor(weightNewtons))
-				breakLBS=floor(weightNewtons*0.224808943)
-				holder3=2
-				break
-			else:
-				weightNewtons=weightNewtons+1 #increasing weight
+				breakNewtons=(math.floor(weightNewtons))
+				breakLBS=math.floor(weightNewtons*0.224808943)
+				GetOut=True
+		
+		if GetOut == True:
+			weightloop=False
+		else:
+			weightNewtons=weightNewtons+1 #increasing weight
 			
 		
 	
-
-
 
 #now to see if it deflects more than the height of the trucks and wheels
 #if it does I assume it bottoms out
@@ -492,7 +496,7 @@ while holder3==1:
 # to find the moment of inertia, first i'll need a center line
 centerlinePRE=0
 totalMass=0
-for loopvar4 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
+for loopvar4 in mylinspace(0,(interfacingEdges-2),(interfacingEdges-2)):
 	layercenter=(layeredges[loopvar4]+layeredges[loopvar4+1])/2
 	footplatform=boardwidth*wheelbase
 	layerMass=Hn[loopvar4]*footplatform*density[loopvar4]
@@ -502,26 +506,25 @@ for loopvar4 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
 
 centerline=centerlinePRE/(totalMass) # units of mm
 
+NeutralAxisDist = []
 PreE=0
-counter10=1 #finding all the neutral axis distances
-for loopvar10 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
-	NeutralAxisDist[counter10]=(layeredges[counter10]+layeredges[counter10+1])/2-centerline
-	PreE=PreE+E1perlay[counter10]*abs(layeredges[counter10]-layeredges[counter10+1])*boardwidth  
+#finding all the neutral axis distances
+for loopvar10 in mylinspace(0,(interfacingEdges-2),(interfacingEdges-2)):
+	NeutralAxisDist.append(0)
+	NeutralAxisDist[loopvar10]=(layeredges[loopvar10]+layeredges[loopvar10+1])/2-centerline
+	PreE=PreE+E1perlay[loopvar10]*abs(layeredges[loopvar10]-layeredges[loopvar10+1])*boardwidth  
 	#I'll just take an average with respect to area. 
-	counter10=counter10+1
 
 
-FinalE=PreE/((layeredges(1)-layeredges(interfacingEdges))*boardwidth)
+FinalE=PreE/((layeredges[0]-layeredges[interfacingEdges-1])*boardwidth)
 
 # remember || axis theorm, I=Ii+Ad**2
-counter11=1
 IFinal=0
-for loopvar11 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
-	IInitial=((layeredges[counter11]-layeredges[counter11+1])*boardwidth**3)/12
-	layerarea=(layeredges[counter11]-layeredges[counter11+1])*boardwidth
-	distancesquared=NeutralAxisDist[counter11]**2
+for loopvar11 in mylinspace(0,(interfacingEdges-2),(interfacingEdges-2)):
+	IInitial=((layeredges[loopvar11]-layeredges[loopvar11+1])*boardwidth**3)/12
+	layerarea=(layeredges[loopvar11]-layeredges[loopvar11+1])*boardwidth
+	distancesquared=NeutralAxisDist[loopvar11]**2
 	IFinal=IFinal+IInitial+layerarea*distancesquared
-	counter11=counter11+1
 
 
 #ok, I'm trying to find the b in a simply supported beam
@@ -529,10 +532,11 @@ for loopvar11 in mylinspace(1,(interfacingEdges-1),(interfacingEdges-1)):
 bottomOut=48*FinalE*IFinal*(50.8+camber)/(wheelbase**3) 
 #conversion from GPa to LBS
 bottomOutLBS=bottomOut*145037.73773*(wheelbase*boardwidth/(25.4**2)) 
+bottomOutLBS=bottomOutLBS[0]
 
-if round(bottomOutLBS)<breakLBS:
+if round(bottomOutLBS,0)<breakLBS:
 	print('Itll bottom out at')
-	print(round(bottomOutLBS))
+	print(round(bottomOutLBS,0))
 	print('lbs')
 	print('and would have broken at')
 	print(breakLBS)
